@@ -14,6 +14,8 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "users")
@@ -26,9 +28,11 @@ public class User {
     private String name;
 
     @NotBlank(message = "Email can not be blank")
+    @Pattern(regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$", message = "Email is not valid")
     private String email;
 
     @NotBlank(message = "Password can not be blank")
+    @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
 
     @Column(columnDefinition = "MEDIUMTEXT")

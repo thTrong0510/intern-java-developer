@@ -19,9 +19,9 @@ import com.trong.blog.blog.domain.dto.ResultPaginationDTO;
 import com.trong.blog.blog.service.PostService;
 import com.trong.blog.blog.service.UserService;
 import com.trong.blog.blog.util.SecurityUtil;
+import com.trong.blog.blog.util.annotation.ApiMessage;
 import com.trong.blog.blog.util.exception.IdInvalidException;
 
-import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -36,8 +36,8 @@ public class PostController {
         this.userService = userService;
     }
 
-    // Create
     @PostMapping("/posts")
+    @ApiMessage("Create a post")
     public ResponseEntity<Post> createPost(@RequestBody Post post) {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() == true
                 ? SecurityUtil.getCurrentUserLogin().get()
@@ -46,20 +46,21 @@ public class PostController {
         return ResponseEntity.ok(postService.createPost(post, user));
     }
 
-    // Read all
     @GetMapping("/posts")
-    public ResponseEntity<ResultPaginationDTO> getAllPosts(@RequestParam("current") Optional<String> currentOptional,
+    @ApiMessage("get all posts with pagination")
+
+    public ResponseEntity<ResultPaginationDTO> getAllPosts(@RequestParam("page") Optional<String> pageOptional,
             @RequestParam("pageSize") Optional<String> pageSizeOptional) {
-        String sCurrent = currentOptional.isPresent() ? currentOptional.get() : "";
+        String sPage = pageOptional.isPresent() ? pageOptional.get() : "";
         String sPageSize = pageSizeOptional.isPresent() ? pageSizeOptional.get() : "";
-        int current = Integer.parseInt(sCurrent) - 1;
+        int page = Integer.parseInt(sPage) - 1;
         int pageSize = Integer.parseInt(sPageSize);
-        Pageable pageable = PageRequest.of(current, pageSize);
+        Pageable pageable = PageRequest.of(page, pageSize);
         return ResponseEntity.ok(postService.getAllPosts(pageable));
     }
 
-    // Read by ID
     @GetMapping("/post/{id}")
+    @ApiMessage("get a post")
     public ResponseEntity<Post> fetchPostById(@PathVariable Long id) throws IdInvalidException {
         Optional<Post> post = this.postService.fetchPostById(id);
         if (post.isEmpty()) {
@@ -69,21 +70,38 @@ public class PostController {
     }
 
     @GetMapping("/user/posts")
-    public ResponseEntity<List<Post>> fetchPostsByUser(@PathVariable Long userId) throws IdInvalidException {
-        Optional<User> user = this.userService.fetchUserById(userId);
-        if (user.isEmpty()) {
-            throw new IdInvalidException("Id user: " + userId + " not found");
-        }
-        return ResponseEntity.ok(postService.fetchPostsByUser(user.get()));
+    @ApiMessage("get all post with pagination by user")
+    public ResponseEntity<ResultPaginationDTO> fetchPostsByUser(@RequestParam("page") Optional<String> pageOptional,
+            @RequestParam("pageSize") Optional<String> pageSizeOptional) throws IdInvalidException {
+
+        String sPage = pageOptional.isPresent() ? pageOptional.get() : "";
+        String sPageSize = pageSizeOptional.isPresent() ? pageSizeOptional.get() : "";
+        int page = Integer.parseInt(sPage) - 1;
+        int pageSize = Integer.parseInt(sPageSize);
+        Pageable pageable = PageRequest.of(page, pageSize);
+
+        String email = SecurityUtil.getCurrentUserLogin().isPresent() == true
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : null;
+        User user = this.userService.fetchUserByEmail(email).get();
+
+        return ResponseEntity.ok(postService.fetchPostsByUser(user, pageable));
     }
 
     // Update
     @PutMapping("/posts")
+    @ApiMessage("Update a post")
+
     public ResponseEntity<Post> updatePost(@RequestBody Post post) throws IdInvalidException {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() == true
                 ? SecurityUtil.getCurrentUserLogin().get()
                 : null;
-        User user = this.userService.fetchUserById(post.getUser().getId()).get();
+
+        Optional<Post> postDb = this.postService.fetchPostById(post.getId());
+        if (postDb.isEmpty()) {
+            throw new IdInvalidException("Post: " + post.getId() + " isn't exist");
+        }
+        User user = this.userService.fetchUserById(postDb.get().getUser().getId()).get();
         if (!email.equals(user.getEmail())) {
             throw new IdInvalidException("You have not permission");
         }
@@ -92,6 +110,7 @@ public class PostController {
 
     // Delete
     @DeleteMapping("/posts/{id}")
+    @ApiMessage("delete a post")
     public ResponseEntity<Void> deletePost(@PathVariable("id") Long id) throws IdInvalidException {
         Optional<Post> post = this.postService.fetchPostById(id);
         if (post.isEmpty()) {

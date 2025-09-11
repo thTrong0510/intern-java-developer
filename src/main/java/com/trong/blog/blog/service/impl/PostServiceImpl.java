@@ -54,8 +54,27 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<Post> fetchPostsByUser(User user) {
-        return this.postRepository.findByUser(user);
+    public ResultPaginationDTO fetchPostsByUser(User user, Pageable pageable) {
+
+        Page<Post> pagePost = this.postRepository.findByUser(user, pageable);
+
+        Meta meta = new Meta();
+
+        // lấy từ pageable tức là lấy từ mấy params
+        meta.setPage(pageable.getPageNumber() + 1);// lúc đầu đã -1
+        meta.setPageSize(pageable.getPageSize());
+
+        // này là lấy khi đã xún database rồi truy vấn lên lại
+        meta.setPages(pagePost.getTotalPages());
+        meta.setTotal(pagePost.getTotalElements());
+
+        ResultPaginationDTO result = new ResultPaginationDTO();
+
+        result.setResult(convertToResPostDTO(pagePost.getContent()));
+        result.setMeta(meta);
+
+        return result;
+
     }
 
     @Override

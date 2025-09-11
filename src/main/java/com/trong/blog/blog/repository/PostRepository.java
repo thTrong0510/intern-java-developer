@@ -13,7 +13,7 @@ import com.trong.blog.blog.domain.User;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificationExecutor<Post> {
-    List<Post> findByUser(User user);
+    Page<Post> findByUser(User user, Pageable pageable);
 
     Page<Post> findAll(Pageable pageable);
 }

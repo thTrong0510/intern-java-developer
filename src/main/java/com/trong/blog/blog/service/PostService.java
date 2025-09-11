@@ -18,7 +18,7 @@ public interface PostService {
 
     ResultPaginationDTO getAllPosts(Pageable pageable);
 
-    List<Post> fetchPostsByUser(User user);
+    ResultPaginationDTO fetchPostsByUser(User user, Pageable pageable);
 
     Optional<Post> fetchPostById(Long id);
 

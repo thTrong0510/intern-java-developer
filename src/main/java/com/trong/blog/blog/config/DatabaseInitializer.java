@@ -36,22 +36,33 @@ public class DatabaseInitializer implements CommandLineRunner {
 
         // User
         if (userCount == 0) {
-            User adminUser = new User();
-            adminUser.setEmail("test@gmail.com");
-            adminUser.setName("I'm test user");
-            adminUser.setPassword(this.passwordEncoder.encode("123456"));
+            User testUser = new User();
+            testUser.setEmail("test@gmail.com");
+            testUser.setName("I'm test user");
+            testUser.setPassword(this.passwordEncoder.encode("123456"));
 
-            this.userRepository.save(adminUser);
+            User test_User = new User();
+            test_User.setEmail("test_@gmail.com");
+            test_User.setName("I'm test_ user");
+            test_User.setPassword(this.passwordEncoder.encode("123456"));
+
+            this.userRepository.save(testUser);
+            this.userRepository.save(test_User);
         }
 
         // Nếu chưa có post nào -> tạo 10 post mẫu
         if (postCount == 0) {
             List<Post> posts = new ArrayList<>();
-            for (int i = 1; i <= 10; i++) {
+            for (int i = 1; i <= 5; i++) {
                 Post post = new Post();
                 post.setTitle("Bài Post số: " + i);
                 post.setContent("Nội dung của bài Post số: " + i);
-                User user = this.userRepository.findById(Long.valueOf(1)).get();
+                User user = null;
+                if (i % 2 == 0) {
+                    user = this.userRepository.findById(Long.valueOf(1)).get();
+                } else {
+                    user = this.userRepository.findById(Long.valueOf(2)).get();
+                }
                 post.setUser(user);
                 posts.add(post);
             }
